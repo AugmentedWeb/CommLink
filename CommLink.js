@@ -135,7 +135,7 @@ class CommLinkHandler {
         const listener = {
             sender,
             commandHandler,
-            intervalObj: setIntervalAsync(this.receivePackets.bind(this), this.statusCheckInterval),
+            intervalObj: this.setIntervalAsync(this.receivePackets.bind(this), this.statusCheckInterval),
         };
 
         this.listeners.push(listener);
