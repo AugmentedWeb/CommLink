@@ -6,7 +6,7 @@ CommLink is an open source library for userscripts that enables cross-window com
 
 To use CommLink in your userscript, you need to add the following line to the userscript header
 ```js
-// @require     https://raw.githubusercontent.com/Hakorr/CommLink/main/CommLink.js
+// @require     https://raw.githubusercontent.com/Hakorr/CommLink/stable-1.0.0/CommLink.js
 ```
 
 ## Usage
