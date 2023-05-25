@@ -22,7 +22,7 @@ class CommLinkHandler {
           .forEach(packet => this.removePacketByID(packet.id));
     }
 
-    setIntervalAsync(callback, interval) {
+    setIntervalAsync(callback, interval = this.statusCheckInterval) {
         let running = true;
 
         async function loop() {
@@ -41,7 +41,7 @@ class CommLinkHandler {
 
         return { stop: () => running = false };
     }
-    
+
     getUniqueID() {
         return ([1e7]+-1e3+4e3+-8e3+-1e11).replace(/[018]/g, c =>
             (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
@@ -128,7 +128,7 @@ class CommLinkHandler {
     }
 
     registerSendCommand(name, obj) {
-        this.commands[name] = data => this.commLinkSend(obj?.commlinkID || this.commlinkID , name, obj?.data || data);
+        this.commands[name] = async data => await this.commLinkSend(obj?.commlinkID || this.commlinkID , name, obj?.data || data);
     }
 
     registerListener(sender, commandHandler) {
