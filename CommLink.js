@@ -22,6 +22,26 @@ class CommLinkHandler {
           .forEach(packet => this.removePacketByID(packet.id));
     }
 
+    setIntervalAsync(callback, interval) {
+        let running = true;
+
+        async function loop() {
+            while(running) {
+                try {
+                    await callback();
+
+                    await new Promise((resolve) => setTimeout(resolve, interval));
+                } catch (e) {
+                    continue;
+                }
+            }
+        };
+
+        loop();
+
+        return { stop: () => running = false };
+    }
+    
     getUniqueID() {
         return ([1e7]+-1e3+4e3+-8e3+-1e11).replace(/[018]/g, c =>
             (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
@@ -115,7 +135,7 @@ class CommLinkHandler {
         const listener = {
             sender,
             commandHandler,
-            intervalObj: setInterval(this.receivePackets.bind(this), this.statusCheckInterval),
+            intervalObj: setIntervalAsync(this.receivePackets.bind(this), this.statusCheckInterval),
         };
 
         this.listeners.push(listener);
@@ -143,6 +163,6 @@ class CommLinkHandler {
     }
 
     kill() {
-        this.listeners.forEach(listener => clearInterval(listener?.intervalObj));
+        this.listeners.forEach(listener => listener.intervalObj.stop());
     }
 }
