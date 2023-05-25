@@ -108,7 +108,7 @@ class CommLinkHandler {
     }
 
     registerSendCommand(name, obj) {
-        this.commands[name] = data => this.commLinkSend(obj?.sender || this.commlinkID , name, obj?.data || data);
+        this.commands[name] = data => this.commLinkSend(obj?.commlinkID || this.commlinkID , name, data || obj?.data);
     }
 
     registerListener(sender, commandHandler) {
