@@ -10,7 +10,7 @@ To use CommLink in your userscript, you need to add the following line to the us
 // @grant       GM_setValue
 // @grant       GM_deleteValue
 // @grant       GM_listValues
-// @require     https://raw.githubusercontent.com/Hakorr/CommLink/main/CommLink.js
+// @require     https://raw.githubusercontent.com/AugmentedWeb/CommLink/main/CommLink.js
 ```
 
 ## Usage
