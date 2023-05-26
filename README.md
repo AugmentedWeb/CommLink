@@ -22,6 +22,13 @@ Too lazy to write documentation right now, check the examples to get an idea.
 ### Site #1
 
 ```js
+const CommLink = new CommLinkHandler(`frontend_${commLinkInstanceID}`, {
+    'singlePacketResponseWaitTime': 1500,
+    'maxSendAttempts': 3,
+    'statusCheckInterval': 1,
+    'silentMode': false
+});
+
 // manually register a command so that the variables are dynamic
 CommLink.commands['createInstance'] = async () => {
     return await CommLink.commLinkSend('mum', 'createInstance', {
