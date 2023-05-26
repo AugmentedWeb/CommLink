@@ -1,3 +1,10 @@
+/* CommLink.js
+ - Version: 1.0.0
+ - Author: Haka
+ - Description: A userscript library for cross-window communication via the userscript storage
+ - GitHub: https://github.com/Hakorr/CommLink
+ */
+
 class CommLinkHandler {
     constructor(commlinkID, configObj) {
         this.commlinkID = commlinkID;
