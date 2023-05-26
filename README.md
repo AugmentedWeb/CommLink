@@ -57,6 +57,10 @@ CommLink.registerListener(`backend_${commLinkInstanceID}`, packet => {
         return null;
     }
 });
+
+// [other code] //
+
+CommLink.commands.log(`Hello World!`);
 ```
 
 ### Site #2 file #1
