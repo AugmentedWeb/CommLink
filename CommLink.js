@@ -1,5 +1,5 @@
 /* CommLink.js
- - Version: 1.0.0
+ - Version: 1.0.1
  - Author: Haka
  - Description: A userscript library for cross-window communication via the userscript storage
  - GitHub: https://github.com/AugmentedWeb/CommLink
@@ -81,7 +81,7 @@ class CommLinkHandler {
         GM_setValue(this.getCommKey(newPacket.id), newPacket);
     }
 
-    commLinkSend(platform, cmd, d) {
+    send(platform, cmd, d) {
         return new Promise(async resolve => {
             const packetWaitTimeMs = this.singlePacketResponseWaitTime;
             const maxAttempts = this.maxSendAttempts;
@@ -135,7 +135,7 @@ class CommLinkHandler {
     }
 
     registerSendCommand(name, obj) {
-        this.commands[name] = async data => await this.commLinkSend(obj?.commlinkID || this.commlinkID , name, obj?.data || data);
+        this.commands[name] = async data => await this.send(obj?.commlinkID || this.commlinkID , name, obj?.data || data);
     }
 
     registerListener(sender, commandHandler) {
