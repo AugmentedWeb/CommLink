@@ -31,7 +31,7 @@ const CommLink = new CommLinkHandler(`frontend_${commLinkInstanceID}`, {
 
 // manually register a command so that the variables are dynamic
 CommLink.commands['createInstance'] = async () => {
-    return await CommLink.commLinkSend('mum', 'createInstance', {
+    return await CommLink.send('mum', 'createInstance', {
         'domain': window.location.hostname.replace('www.', ''),
         'instanceID': commLinkInstanceID,
         'chessVariant': getSiteChessVariant(),
