@@ -4,18 +4,22 @@ CommLink is an open source library for userscripts that enables cross-window com
 
 ## Installation
 
-To use CommLink in your userscript, you need to add the following line to the userscript header
+To use CommLink in your userscript, you need to add the following lines to the userscript header,
 ```js
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @grant       GM_deleteValue
 // @grant       GM_listValues
-// @require     https://raw.githubusercontent.com/AugmentedWeb/CommLink/main/CommLink.js
+// @require     https://greasyfork.org/scripts/470418-commlink-js/code/CommLinkjs.js?version=1217207
 ```
+
+> **Warning** DO NOT REQUIRE ANY FILES FROM THIS REPOSITORY DIRECTLY! CommLink is currently not in its final form and the logic might change in the future. Only use the version controlled GreasyFork URL to require CommLink for now. Thank you so much for your understanding.
 
 ## Usage
 
-Too lazy to write documentation right now, check the examples to get an idea.
+I'm so sorry, but I am too lazy to write documentation right now, check the examples to get an idea.
+
+CommLink is currently just a byproduct of the A.C.A.S project.
 
 ## Examples
 
