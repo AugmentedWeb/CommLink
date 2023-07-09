@@ -17,9 +17,9 @@ To use CommLink in your userscript, you need to add the following lines to the u
 
 ## Usage
 
-I'm so sorry, but I am too lazy to write documentation right now, check the examples to get an idea.
+I'm so sorry, but I am too lazy to write documentation right now. You can check the examples to get an idea.
 
-CommLink is currently just a byproduct of the A.C.A.S project.
+CommLink is currently just a byproduct of the A.C.A.S project. I wouldn't use CommLink for your personal large-scale projects.
 
 ## Examples
 
