@@ -1,5 +1,5 @@
 /* CommLink.js
- - Version: 1.0.1
+ - Version: 1.0.2
  - Author: Haka
  - Description: A userscript library for cross-window communication via the userscript storage
  - GitHub: https://github.com/AugmentedWeb/CommLink
@@ -17,12 +17,12 @@ class CommLinkHandler {
         this.commands = {};
         this.listeners = [];
 
+        const grants = GM_info?.script?.grant || [];
         const missingGrants = ['GM_getValue', 'GM_setValue', 'GM_deleteValue', 'GM_listValues']
-            .filter(grant => !GM_info.script.grant.includes(grant));
+            .filter(grant => !grants.includes(grant));
 
-        if(missingGrants.length > 0 && !this.silentMode) {
-            alert(`[CommLink] The following userscript grants are missing: ${missingGrants.join(', ')}. CommLink will not work.`);
-        }
+        if(missingGrants.length > 0 && !this.silentMode)
+            alert(`[CommLink] The following userscript grants are missing: ${missingGrants.join(', ')}. CommLink might not work.`);
 
         this.getStoredPackets()
           .filter(packet => Date.now() - packet.date > 2e4)
