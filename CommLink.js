@@ -1,5 +1,5 @@
 /* CommLink.js
- - Version: 1.0.2
+ - Version: 1.0.3
  - Author: Haka
  - Description: A userscript library for cross-window communication via the userscript storage
  - GitHub: https://github.com/AugmentedWeb/CommLink
@@ -17,16 +17,88 @@ class CommLinkHandler {
         this.commands = {};
         this.listeners = [];
 
-        const grants = GM_info?.script?.grant || [];
-        const missingGrants = ['GM_getValue', 'GM_setValue', 'GM_deleteValue', 'GM_listValues']
-            .filter(grant => !grants.includes(grant));
+        this.greasy = typeof GM === 'object' ? GM : {};
 
-        if(missingGrants.length > 0 && !this.silentMode)
-            alert(`[CommLink] The following userscript grants are missing: ${missingGrants.join(', ')}. CommLink might not work.`);
+        const getFunction = (funcNames, methodName) => {
+            for(const func of funcNames) {
+                if(typeof func === 'function') {
+                    return func;
+                }
+            }
+        
+            if(!this.silentMode) {
+                throw new Error(`No valid method found for ${methodName}`);
+            }
+        };
+        
+        const getValueMethod = getFunction(
+            [
+                typeof GM_getValue !== 'undefined' ? GM_getValue : undefined,
+                this.greasy?.getValue,
+                configObj?.functions?.getValue
+            ],
+            'getValue'
+        );
 
-        this.getStoredPackets()
-          .filter(packet => Date.now() - packet.date > 2e4)
-          .forEach(packet => this.removePacketByID(packet.id));
+        const setValueMethod = getFunction(
+            [
+                typeof GM_setValue !== 'undefined' ? GM_setValue : undefined,
+                this.greasy?.setValue,
+                configObj?.functions?.setValue
+            ],
+            'setValue'
+        );
+
+        const deleteValueMethod = getFunction(
+            [
+                typeof GM_deleteValue !== 'undefined' ? GM_deleteValue : undefined,
+                this.greasy?.deleteValue,
+                configObj?.functions?.deleteValue
+            ],
+            'deleteValue'
+        );
+
+        const listValuesMethod = getFunction(
+            [
+                typeof GM_listValues !== 'undefined' ? GM_listValues : undefined,
+                this.greasy?.listValues,
+                configObj?.functions?.listValues
+            ],
+            'listValues'
+        );
+        
+        this.storage = {
+            getValue: async (key) => {
+                return await getValueMethod(key);
+            },
+            setValue: (key, value) => {
+                return setValueMethod(key, value);
+            },
+            deleteValue: (key) => {
+                return deleteValueMethod(key);
+            },
+            listValues: async () => {
+                return await listValuesMethod();
+            }
+        };
+
+        if(typeof GM_info !== 'undefined') {
+            const grants = (GM_info?.script?.grant) || [];
+            const missingGrants = ['getValue', 'setValue', 'deleteValue', 'listValues']
+                .filter(grant => !grants.some(g => g.endsWith(grant)));
+    
+            if(missingGrants.length > 0 && !this.silentMode)
+                alert(`[CommLink] The following userscript grants are missing: ${missingGrants.join(', ')}. CommLink might not work.`);
+        }
+
+        this.removeOldPackets();
+    }
+
+    async removeOldPackets() {
+        const packets = await this.getStoredPackets();
+
+        packets.filter(packet => Date.now() - packet.date > 2e4)
+            .forEach(packet => this.removePacketByID(packet.id));
     }
 
     setIntervalAsync(callback, interval = this.statusCheckInterval) {
@@ -59,26 +131,34 @@ class CommLinkHandler {
         return this.commlinkValueIndicator + packetID;
     }
 
-    getStoredPackets() {
-        return GM_listValues()
-            .filter(key => key.includes(this.commlinkValueIndicator))
-            .map(key => GM_getValue(key));
+    async getStoredPackets() {
+        const keys = await this.storage.listValues();
+        const storedPackets = [];
+        
+        for(const key of keys) {
+            if(key.includes(this.commlinkValueIndicator)) {
+                const value = await this.storage.getValue(key);
+                storedPackets.push(value);
+            }
+        }
+        
+        return storedPackets;
     }
-
+    
     addPacket(packet) {
-        GM_setValue(this.getCommKey(packet.id), packet);
+        this.storage.setValue(this.getCommKey(packet.id), packet);
     }
 
     removePacketByID(packetID) {
-        GM_deleteValue(this.getCommKey(packetID));
+        this.storage.deleteValue(this.getCommKey(packetID));
     }
 
-    findPacketByID(packetID) {
-        return GM_getValue(this.getCommKey(packetID));
+    async findPacketByID(packetID) {
+        return await this.storage.getValue(this.getCommKey(packetID));
     }
 
     editPacket(newPacket) {
-        GM_setValue(this.getCommKey(newPacket.id), newPacket);
+        this.storage.setValue(this.getCommKey(newPacket.id), newPacket);
     }
 
     send(platform, cmd, d) {
@@ -88,7 +168,7 @@ class CommLinkHandler {
 
             let attempts = 0;
 
-            for (;;) {
+            for(;;) {
                 attempts++;
 
                 const packetID = this.getUniqueID();
@@ -101,11 +181,11 @@ class CommLinkHandler {
 
                 this.addPacket(packet);
 
-                for (;;) {
-                    const poolPacket = this.findPacketByID(packetID);
+                for(;;) {
+                    const poolPacket = await this.findPacketByID(packetID);
                     const packetResult = poolPacket?.result;
 
-                    if (poolPacket && packetResult) {
+                    if(poolPacket && packetResult) {
                         if(!this.silentMode)
                             console.log(`[CommLink Sender] Got result for a packet (${packetID}):`, packetResult);
 
@@ -116,7 +196,7 @@ class CommLinkHandler {
                         break;
                     }
 
-                    if (!poolPacket || Date.now() - attemptStartDate > packetWaitTimeMs) {
+                    if(!poolPacket || Date.now() - attemptStartDate > packetWaitTimeMs) {
                         break;
                     }
 
@@ -125,7 +205,7 @@ class CommLinkHandler {
 
                 this.removePacketByID(packetID);
 
-                if (attempts == maxAttempts) {
+                if(attempts == maxAttempts) {
                     break;
                 }
             }
@@ -142,32 +222,39 @@ class CommLinkHandler {
         const listener = {
             sender,
             commandHandler,
-            intervalObj: this.setIntervalAsync(this.receivePackets.bind(this), this.statusCheckInterval),
+            intervalObj: this.setIntervalAsync(async () => {
+                await this.receivePackets();
+            }, this.statusCheckInterval),
         };
-
+    
         this.listeners.push(listener);
     }
 
-    receivePackets() {
-        this.getStoredPackets().forEach(packet => {
-            this.listeners.forEach(listener => {
+    async receivePackets() {
+        const packets = await this.getStoredPackets();
+
+        for(const packet of packets) {
+            for(const listener of this.listeners) {
                 if(packet.sender === listener.sender && !packet.hasOwnProperty('result')) {
-                    const result = listener.commandHandler(packet);
+                    try {
+                        const result = await listener.commandHandler(packet);
+                        packet.result = result;
 
-                    packet.result = result;
-
-                    this.editPacket(packet);
-
-                    if(!this.silentMode) {
-                        if(packet.result == null)
-                            console.log('[CommLink Receiver] Possibly failed to handle packet:', packet);
-                        else
-                            console.log('[CommLink Receiver] Successfully handled a packet:', packet);
+                        this.editPacket(packet);
+                        
+                        if(!this.silentMode) {
+                            if(packet.result == null)
+                                console.log('[CommLink Receiver] Possibly failed to handle packet:', packet);
+                            else
+                                console.log('[CommLink Receiver] Successfully handled a packet:', packet);
+                        }
+                    } catch(error) {
+                        console.error('[CommLink Receiver] Error handling packet:', error);
                     }
                 }
-            });
-        });
-    }
+            }
+        }
+    }    
 
     kill() {
         this.listeners.forEach(listener => listener.intervalObj.stop());
