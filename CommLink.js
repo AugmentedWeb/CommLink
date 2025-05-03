@@ -97,7 +97,7 @@ class CommLinkHandler {
     async removeOldPackets() {
         const packets = await this.getStoredPackets();
 
-        packets.filter(packet => Date.now() - packet.date > 2e4)
+        packets.filter(packet => Date.now() - packet?.date > 2e4)
             .forEach(packet => this.removePacketByID(packet.id));
     }
 
